@@ -91,6 +91,26 @@ let addClass = function (className) { // Using  declaration function/function ex
 
     },
 
+    getElmRect = (elm) =>{
+       
+        let elmRect = elm.getBoundingClientRect(), // returns the size (width, height) of the element and its position (top, bottom)relative to viewport!
+
+        elmHeight = getComputedHeight(elm),
+        
+        docElmY = docElm.scrollTop,
+
+
+            // this to get a fixed top value of the section in the document.
+            //(0, 0) is moved to the topmost of the document instead of the topmost of the viewport
+
+            elmCoors = {
+                top: elmRect.top + docElmY,
+                bttm: elmRect.top + docElmY + elmHeight
+            };
+
+            return elmCoors;
+
+    },
 
     /**
      * End Helper Functions
@@ -113,25 +133,13 @@ let addClass = function (className) { // Using  declaration function/function ex
         // code adapted to my special use
     isLoadedInViewport = (elm) => {
 
-        let elmHeight = getComputedHeight(elm),
-
-            winHeight = window.innerHeight,
+            let winHeight = window.innerHeight,
 
             docElmY = docElm.scrollTop,
 
-            elmRect = elm.getBoundingClientRect(), // returns the size (width, height) of the element and its position (top, bottom)relative to viewport!
+            elmHeight = getComputedHeight(elm),
 
-
- 
-
-             // this to get a fixed top value of the section in the document.
-            //(0, 0) is moved to the topmost of the document instead of the topmost of the viewport
-
-            elmCoors = {
-                top: elmRect.top + docElmY,
-                bttm: elmRect.top + docElmY + elmHeight
-            },
-            
+            elmCoors = getElmRect(elm),
 
             //When scrollTop is used on the root element (the <html> element), the scrollY of the window is returned
            // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTop
@@ -189,13 +197,34 @@ let addClass = function (className) { // Using  declaration function/function ex
 
           e.preventDefault();
 
+          docElm.style.scrollBehavior = 'smooth';
+
           if(e.target.nodeName.toLowerCase() === 'a') {
 
-             const activeSection = document.getElementById(e.target.dataset.link)
+           
 
-              activeSection.scrollIntoView(true);
+             for (let k = 0; k < secs.length; k++){
 
-            console.log(activeSection);
+                 
+                  
+
+                if(e.target.dataset.link === secs[k].id) {
+
+                 
+                   
+                secs[k].scrollIntoView(true);
+                
+                secs[k].scrollIntoView(false);
+                //   let elmRect = getElmRect(secs[k])
+
+                //   console.log(elmRect.top);
+
+                //    window.scroll(0, elmRect.top);
+                }
+ 
+             }
+
+           
           }
 
     });
