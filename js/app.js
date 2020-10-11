@@ -183,17 +183,19 @@ let addClass = function (className) { // Using  declaration function/function ex
 
     let timeoutId = null;
 
-    timeoutId = setTimeout(() => pageHeader.style.visibility = 'hidden', 5000); // page header disappears after 5000 ms, 5s
+    timeoutId = setTimeout(() => pageHeader.style.visibility = 'hidden', 20000); // page header disappears after 5000 ms, 5s
     
     pageHeader.addEventListener('click', function(e){ //event delegation to the parent node
 
           e.preventDefault();
 
-          if(e.target.nodeName === 'A') {
+          if(e.target.nodeName.toLowerCase() === 'a') {
 
-             document.getElementById(e.target.dataset.link).scrollIntoView(true);
+             const activeSection = document.getElementById(e.target.dataset.link)
 
-            
+              activeSection.scrollIntoView(true);
+
+            console.log(activeSection);
           }
 
     });
@@ -259,7 +261,7 @@ let addClass = function (className) { // Using  declaration function/function ex
         }
 
 
-        timeoutId = setTimeout(() => pageHeader.style.visibility = 'hidden', 5000);
+        timeoutId = setTimeout(() => pageHeader.style.visibility = 'hidden', 20000);
 
 
     });
