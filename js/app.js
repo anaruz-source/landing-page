@@ -206,20 +206,13 @@ let addClass = function (className) { // Using  declaration function/function ex
              for (let k = 0; k < secs.length; k++){
 
                  
-                  
-
                 if(e.target.dataset.link === secs[k].id) {
 
-                 
-                   
-                secs[k].scrollIntoView(true);
-                
-                secs[k].scrollIntoView(false);
-                //   let elmRect = getElmRect(secs[k])
+                  let elmRect = getElmRect(secs[k])
 
-                //   console.log(elmRect.top);
+                  console.log(elmRect.top);
 
-                //    window.scroll(0, elmRect.top);
+                   window.scroll(0, elmRect.top);
                 }
  
              }
