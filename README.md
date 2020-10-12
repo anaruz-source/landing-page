@@ -22,7 +22,7 @@ the app.js includes three main functions:
 - ```isLoadededInViewport``` uses calculated element's height, ```window.innerHeight``` and ```getBoundingClientRect``` to say if the element is in the viewport.       
 - ```document scroll event``` is used to detect scrolling. 
 - ```getElmRect``` used to calculate the coordinates/size of element relative to document instead to viewport!
-- ```insertCollapseButton``` and ``````
+- ```insertCollapseButton``` and ```hideCollapseButton``` to insert and hide collapse button!
 
 ### Alternatives
 
