@@ -33,6 +33,7 @@ const docElm = document.documentElement,
     ul = document.getElementById('navbar__list'),
 
     pageHeader = document.getElementsByClassName('page__header')[0];
+ 
 
 
 /**
@@ -41,8 +42,23 @@ const docElm = document.documentElement,
  *
  */
 
+let activeSecHeight = 0, // to store current active section height
+    activeSecMinHeight = 0, // to store current active section min-height
+    secsHeights = [],  // all sections' original heights
+    secsMinHeights = [], //// all sections' original min-heights
 
-let addClass = function (className) { // Using  declaration function/function expression because, arrow functions resolve 'this'  to enclosing lexical scope
+    fillSectionsHeights = (secs) => {
+
+        for(let i = 0; i < secs.length; i++){
+
+            secsHeights [i] = getComputedHeight(secs[i]);
+            
+            secsMinHeights [i] = parseFloat(getComputedStyle(secs[i]).minHeight);
+
+        }
+    },
+
+    addClass = function (className) { // Using  declaration function/function expression because, arrow functions resolve 'this'  to enclosing lexical scope
                                      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions
                                      // changing function's scope
 
@@ -81,13 +97,43 @@ let addClass = function (className) { // Using  declaration function/function ex
 
     },
 
+  // JQuery3.2.1 inspired me on writting this function
+  // I made an analysis of JQuery earlier in 2020!
 
-    getComputedHeight = (elm) => {
 
-        if (elm === undefined) return 0; //avoiding any unnecessary calculation if element parameter is undefined
+  // https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing
 
-        return parseFloat(getComputedStyle(elm).height); // parseFloat converts string to a float stripping off the px unit
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseFloat
+  // this adjustement are added for the sake of collapsing part
+
+    getComputedHeight = (elm, adjust) => {  // we can use default parameter 'adjust = false', for the sake of backward compatibility we don't! 
+                                            //it resolves to undefined which is == false
+
+                                          // in case of box-sizing: border-box, element could be adjust with extrat height, margin never added
+                                          // in both box models
+        
+        if (!elm) return 0; //elm undefined/null , avoid any unnecessary verifications
+        
+        let adjustement = 0,
+
+        computed = getComputedStyle(elm);
+
+        if(adjust){
+          
+
+            if(computed.boxSizing === 'content-box'){ //padding border not included in calculation of this box model so adding them
+
+                // parseFloat converts string to a float stripping off the px unit
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseFloat
+
+                adjustement = parseFloat(computed.paddingTop) + parseFloat(computed.paddingBottom) + parseFloat(computed.borderTopWidth) + parseFloat(computed.borderBottomWidth);
+            }
+
+            adjustement += parseFloat(computed.marginTop) + parseFloat(computed.marginBottom) // margin not included in both box models
+        }
+
+      
+
+        return parseFloat(computed.height) + adjustement; 
 
     },
 
@@ -164,10 +210,98 @@ let addClass = function (className) { // Using  declaration function/function ex
 
         for (let i = 0; i < elms.length; i++) { // we can use Array.prototype.forEach.call instead to change the 'this' reference of forEach to be 'this' of HMTLCollection
                                                  // as we did for addClass and removeClass
-            liElems += `<li><a href="#${secs[i].id}"  data-link ="${secs[i].id}">  ${secs[i].getAttribute('data-nav')}  </a></li>`;
+            liElems += `<li><a href="#${secs[i].id}"  data-link ="${secs[i].id}">  ${secs[i].dataset.nav}  </a></li>`;
         }
 
         return liElems;
+    },
+
+    insertCollapseButton = (sec)=>{ // this function inserts 'collapse me' button, different textContent added depending if collapse or not!
+
+                                    // more advanced collapse/expand systems exist however, I need to to submit in time so I settle for this minimal one!
+
+                                    // adv: https://github.com/GoogleChromeLabs/ui-element-samples/tree/gh-pages/animated-clip/advanced
+
+
+        let currentSecHeight = getComputedHeight(sec), 
+        
+        button = sec.firstElementChild.firstElementChild,
+
+        buttonH = getComputedHeight(button);
+
+
+            if(button.nodeName.toLowerCase() !== 'button'){ // only insert button once, if it's not there.
+
+
+
+                sec.firstElementChild.insertAdjacentHTML('afterbegin', ' <button class="collapseme">Collapse me!</button>')
+                
+                
+                button = sec.firstElementChild.firstElementChild;
+               
+                buttonH = getComputedHeight(button);
+
+                let    visibleHeight = getComputedHeight(document.getElementsByTagName('h2')[0], true) + buttonH; // we include height+margins of h2 element + button height
+
+                   activeSecHeight += buttonH;//
+                   
+                
+                
+                sec.style.transition = 'height 1s';
+                sec.style.height = activeSecHeight +'px';
+
+                button.addEventListener('click', () => {
+
+                    if(activeSecHeight  <= currentSecHeight + buttonH) { // currentSecHeight calculated before adding button, so It be smaller than activeSecHeight
+
+                           
+                        currentSecHeight = visibleHeight; // reducing height to only button height and h2 height (collapse)
+                            
+                        sec.style.minHeight = currentSecHeight + 'px';
+
+                        sec.style.height = currentSecHeight + 'px';
+    
+                        button.textContent = `${sec.dataset.nav} collapsed, click to expand!`;
+
+                
+                    } else {  // put back the original height + button height (expand)
+                        
+                        currentSecHeight = activeSecHeight;
+        
+                        sec.style.minHeight = activeSecMinHeight +'px';
+                       
+                        sec.style.height = currentSecHeight +'px';
+
+                        button.textContent = `Collapse me!`;
+
+                       
+                    }
+                    
+                });
+
+            } else { 
+                
+                // if it's there it should be hidden, make it visible;
+                // I used visibility instead of display for  sections to have  fixed heights.      
+
+                button.style.visibility = 'visible'; // show button if section loaded in viewport
+
+                if(activeSecHeight < activeSecHeight +buttonH) activeSecHeight += buttonH;
+            }
+           
+ 
+    },
+
+    hideCollapseButton = (sec) =>{ // hide button for inactive section if it's already there!
+      
+        const button = sec.firstElementChild.firstElementChild;
+
+        if (button.nodeName.toLowerCase() === 'button') {
+
+            button.style.visibility = 'hidden';
+        }
+
+       
     };
 
 /**
@@ -188,6 +322,8 @@ let addClass = function (className) { // Using  declaration function/function ex
 
     ul.innerHTML = createMenu(secs);
 
+   fillSectionsHeights(secs); // initialize arrays of heights and min heights.
+
 
     let timeoutId = null;
 
@@ -195,9 +331,10 @@ let addClass = function (className) { // Using  declaration function/function ex
     
     pageHeader.addEventListener('click', function(e){ //event delegation to the parent node
 
-          e.preventDefault();
+          e.preventDefault(); // requirements of the 1st submission
 
-          docElm.style.scrollBehavior = 'smooth';
+        docElm.style.scrollBehavior = 'smooth'; // requirements of the 1st submission
+
 
           if(e.target.nodeName.toLowerCase() === 'a') {
 
@@ -210,9 +347,9 @@ let addClass = function (className) { // Using  declaration function/function ex
 
                   let elmRect = getElmRect(secs[k])
 
-                  console.log(elmRect.top);
+                 
+                    window.scroll(0, elmRect.top); // requirements of the 1st submission
 
-                   window.scroll(0, elmRect.top);
                 }
  
              }
@@ -221,6 +358,7 @@ let addClass = function (className) { // Using  declaration function/function ex
           }
 
     });
+
 
 
     document.addEventListener('scroll', () => {
@@ -240,8 +378,16 @@ let addClass = function (className) { // Using  declaration function/function ex
 
 
                 addClass.call(secs[i], 'active');
-                addClass.call(document.querySelector(`li > [href="#${secs[i].id}"]`).parentElement, 'active');
 
+                addClass.call(document.querySelector(`li > [href="#${secs[i].id}"]`).parentElement, 'active');
+                
+              
+               
+                activeSecHeight = secsHeights[ i ]; // store in global var it for collpase and expand
+
+                activeSecMinHeight = secsMinHeights[ i ]; // keeping it for collpase and expand
+                
+                insertCollapseButton(secs[i]);
 
                 for (let j = 0; j < nbOfSecs; j++) {
 
@@ -249,9 +395,11 @@ let addClass = function (className) { // Using  declaration function/function ex
                         // to make sure, if scrolling down next will have 'active' class, otherwise, previous get 'active'
                         // this behaviour is due to the fact we want smooth scrolling transition from one section to the other, 
                         // thus we visualize background moving from one menu  to the other
-
+                      
+                        hideCollapseButton(secs[j]);
 
                         removeClass.call(secs[j], 'active');
+
                         removeClass.call(document.querySelector(`li > [href="#${secs[j].id}"]`).parentElement, 'active');
 
 
@@ -263,8 +411,10 @@ let addClass = function (className) { // Using  declaration function/function ex
 
             } else { // to remove 'active' class for others to which isLoadedInViewport returns false if any
 
+                hideCollapseButton(secs[i]);    
 
                 removeClass.call(secs[i], 'active');
+
                 removeClass.call(document.querySelector(`li > [href="#${secs[i].id}"]`).parentElement, 'active');
             }
 
@@ -273,6 +423,8 @@ let addClass = function (className) { // Using  declaration function/function ex
 
                 if (secs[i].className.indexOf('active') !== -1) {
 
+                  
+                
                     let pageHeaderScH = pageHeader.scrollHeight;
 
                     pageHeader.scrollTop = pageHeaderScH * i / nbOfSecs; // make the menu bar scroll to the highlighted section 1 to 5;

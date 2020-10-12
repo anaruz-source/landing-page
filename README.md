@@ -1,6 +1,6 @@
 # Landing Page Project
 [![dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)](dependencies) 
-[![dependencies](https://img.shields.io/badge/version-v1.0.0-brightgreen)](dependencies) 
+[![dependencies](https://img.shields.io/badge/version-v1.1.0-brightgreen)](dependencies) 
 [![dependencies](https://img.shields.io/badge/licence-MIT-brightgreen)](dependencies) 
 ## Table of Contents
 
@@ -21,6 +21,8 @@ the app.js includes three main functions:
 - ```getComputedHeight``` using getComputedStyle to get computed style.
 - ```isLoadededInViewport``` uses calculated element's height, ```window.innerHeight``` and ```getBoundingClientRect``` to say if the element is in the viewport.       
 - ```document scroll event``` is used to detect scrolling. 
+- ```getElmRect``` used to calculate the coordinates/size of element relative to document instead to viewport!
+- ```insertCollapseButton``` and ``````
 
 ### Alternatives
 
